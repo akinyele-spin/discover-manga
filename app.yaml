@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-setup-deployment
+  labels:
+    app: app-setup
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-setup
+  template:
+    metadata:
+      labels:
+        app: app-setup
+    spec:
+      containers:
+        - name: app-setup
+          image: docker.io/drummeraki/discover-manga:demo
+          command: ["bundle", "exec", "rails", "db:create", "db:migrate"]
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE_URL
+              value: postgresql://demo:demo@postgres-service:5432/discover_manga_dev
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels:
+    app: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+        - name: app
+          image: docker.io/drummeraki/discover-manga:demo
+          command:
+            ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "80"]
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: DATABASE_URL
+              value: postgresql://demo:demo@postgres-service:5432/discover_manga_dev
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  type: NodePort
+  selector:
+    app: app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 31000
