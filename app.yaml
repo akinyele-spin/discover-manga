@@ -43,12 +43,12 @@ spec:
       containers:
         - name: app
           image: docker.io/drummeraki/discover-manga:demo
-          command:
-            ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "80"]
           imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
+            - name: PORT
+              value: 80
             - name: DATABASE_URL
               value: postgresql://demo:demo@postgres-service:5432/discover_manga_dev
 
